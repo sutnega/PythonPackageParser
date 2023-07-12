@@ -154,12 +154,12 @@ def parsSphere(ParsUrl):
          'Контакты': CompanyPlaceMass, 'Контактное лицо': ArrContactPerson,
          'Описание': CompanyDescriptionMass})  # загрузка в эксель с помощью panda
     parsBD.to_excel(
-        './' + SphereUrl.replace("https://tara.unipack.ru/", "").replace("russia-", "") + 'ParsResults.xlsx')
+        './' + 'ParsResult_'+ SphereUrl.replace("https://tara.unipack.ru/", "").replace("russia-", "") +".xlsx" )
 
     return 'Победа над ' + SphereUrl.replace("https://tara.unipack.ru/", "").replace("russia-", "")
 
 #len(SphereLink1)
-for i in range(2):
+for i in range(1):
     ParsUrl = SphereLink1[i]
     a = parsSphere(ParsUrl)
     print(a)
