@@ -5,7 +5,35 @@ from bs4 import BeautifulSoup
 # https://www.youtube.com/watch?v=EF9UNlB05Rk&list=PL6plRXMq5RADYaw4Xo111smBcEPNMhdHf&index=3
 # по другому гайду    https://idatica.com/blog/parsing-saytov-na-python-rukovodstvo-dlya-novichkov/  https://pishuverno.ru/kak-napisat-parser-dlya-sajta-na-python/
 # Define URL
-url = "https://tara.unipack.ru/russia-1063-ampuli"
+
+urlMain = "https://tara.unipack.ru"
+requests.get(urlMain)
+MainPages = requests.get(urlMain)
+# parser-lxml = Change html to Python friendly format
+MainSoup = BeautifulSoup(MainPages.text, "lxml")  # код сайта готовый к обработки
+MainFilteredParsRes = MainSoup.find("div",
+                                class_="content-work").find("ul")  #  отфильтрованный код компаний
+
+CompanyName1 = []
+CompanyName2 = []
+SphereLink1 = []
+for elem in MainFilteredParsRes:
+    Links = MainFilteredParsRes.find_all("a")
+    for link in Links:
+        link_url = link.get("href")
+        link_text = link.text.strip()
+        link_title = link.get("title")
+        if link_title.find("Галерея продукции")==-1 and link_title.find("Публикации по теме")==-1:
+            CompanyName1.append(link_title + " ")
+            CompanyName2.append(link_text + " ")
+            SphereLink1.append(link_url)
+
+
+
+
+
+
+url = "https:"+SphereLink1[1]
 requests.get(url)
 pages = requests.get(url)
 # parser-lxml = Change html to Python friendly format
@@ -46,12 +74,10 @@ with open('filteredParsResults.txt', "w") as f:
 
 # print (filteredParsRes)
 # with open ("resultParsing.txt", "w", encoding = "utf-8") as file:     file.write(str (filteredParsRes))
-
 # print(CompanyName1)
 # print(CompanyLink1)
 # print(CompanyPlaceMass)
 # print(CompanyDescriptionMass)
-NUM = len(CompanyPlace)
 ArrName = []
 ArrPhone1 = []
 ArrCountry = []
@@ -59,7 +85,7 @@ ArrRegion = []
 ArrAdrress = []
 ArrContactPerson = []
 
-with open('AlternateResults.txt', "w") as AlterF:
+with open('AlternateResults.txt', "w") as AlterF:  # проход по всем страницам компаний
     for elem in CompanyLink1:  # проход по всем страницам компаний
         AlterF.write("________________________________________________________________________ \n")
         url = "https:" + elem + "/contacts"
@@ -111,15 +137,15 @@ with open('AlternateResults.txt', "w") as AlterF:
 
             AlterF.write(StrNotAdvanced)
 
-for i in range(len(ArrName)):
-    print(ArrName[i])
-    print(ArrCountry[i])
-    print(ArrRegion[i])
-    print(ArrAdrress[i])
-    print(ArrPhone1[i])
-    print(ArrContactPerson[i])
-    i = i + 1
-    print("______________________")
+# for i in range(len(ArrName)):
+#     print(ArrName[i])
+#     print(ArrCountry[i])
+#     print(ArrRegion[i])
+#     print(ArrAdrress[i])
+#     print(ArrPhone1[i])
+#     print(ArrContactPerson[i])
+#     i = i + 1
+#     print("______________________")
 
 parsBD = pd.DataFrame(
     {'Название': CompanyName1, 'Название2': CompanyName2, 'Название3': ArrName, 'Сайт': CompanyLink1,
@@ -128,3 +154,5 @@ parsBD = pd.DataFrame(
      'Контакты': CompanyPlaceMass, 'Контактное лицо': ArrContactPerson,
      'Описание': CompanyDescriptionMass})  # загрузка в эксель с помощью panda
 parsBD.to_excel('./ParsResults.xlsx')
+
+
