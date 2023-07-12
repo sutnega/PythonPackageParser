@@ -5,9 +5,9 @@ from bs4 import BeautifulSoup
 # https://www.youtube.com/watch?v=EF9UNlB05Rk&list=PL6plRXMq5RADYaw4Xo111smBcEPNMhdHf&index=3
 # по другому гайду    https://idatica.com/blog/parsing-saytov-na-python-rukovodstvo-dlya-novichkov/  https://pishuverno.ru/kak-napisat-parser-dlya-sajta-na-python/
 # Define URL
-PARSVAR = 2  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
+PARSVAR = 1  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
-PARSCOUNT = 3
+PARSCOUNT = 4
 
 urlMain = "https://tara.unipack.ru"  # ссылка на отрасль
 requests.get(urlMain)
@@ -39,6 +39,15 @@ def parsSphere(ParsUrl, ParsMode):
     filteredParsRes = soup.find_all("div",
                                     class_="product-section")  # product-section simple,   отфильтрованный код компаний
 
+    MorePages = soup.find("ul", class_="page-nav mt30")  #проверка на наличие вложенных страниц
+    if MorePages!=None:
+        IsMorePages = MorePages.find_all("a")  # product-section simple,   отфильтрованный код компаний
+        PagesNum = IsMorePages[-1].text
+        print(PagesNum)
+        for i in range(int(PagesNum)):
+            print(f"?page={i}")
+
+    # верхний парсинг страницы
     with open('filteredParsResults.txt', "w") as f:
         CompanyName1 = []
         CompanyName2 = []
@@ -166,35 +175,28 @@ def parsSphere(ParsUrl, ParsMode):
         if ParsMode == 2: return parsBD
 
 
-if PARSVAR == 2:
-    writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
-    BD_sheets = {}
-    # len(SphereLink1)
-    if PARSNUM == 1:
-        ParsingVar = PARSCOUNT
-    else:
-        if PARSNUM == 2: ParsingVar = len(SphereLink1)
-    for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
-        ParsUrl = SphereLink1[i]
-        a = parsSphere(ParsUrl, 2)
-        BD_sheets[str(i + 1) + ' '] = a
-    for sheet_name in BD_sheets.keys():
-        BD_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
-    writer.close()
-else:
-    for i in range(1):
-        ParsUrl = SphereLink1[i]
-        a = parsSphere(ParsUrl, 1)
-        print(a)
+# if PARSVAR == 2:
+#     writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
+#     BD_sheets = {}
+#     # len(SphereLink1)
+#     if PARSNUM == 1:
+#         ParsingVar = PARSCOUNT
+#     else:
+#         if PARSNUM == 2: ParsingVar = len(SphereLink1)
+#     for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
+#         ParsUrl = SphereLink1[i]
+#         a = parsSphere(ParsUrl, 2)
+#         BD_sheets[str(i + 1) + ' '] = a
+#     for sheet_name in BD_sheets.keys():
+#         BD_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+#     writer.close()
+# else:
+#     for i in range(1):
+#         ParsUrl = SphereLink1[i]
+#         a = parsSphere(ParsUrl, 1)
+#         print(a)
 
-#
-# salaries1 = a
-# salaries2 = pd.DataFrame({'Name': ['K. De Bruyne', 'Neymar Jr', 'R. Lewandowski'],
-#                                         'Salary': [370000, 270000, 240000]})
-# salaries3 = pd.DataFrame({'Name': ['Alisson', 'M. ter Stegen', 'M. Salah'],
-#                                         'Salary': [160000, 260000, 250000]})
-# salary_sheets = {'Group1': salaries1, 'Group2': salaries2, 'Group3': salaries3}
-# writer = pd.ExcelWriter('./salaries.xlsx', engine='xlsxwriter')
-#
-# for sheet_name in salary_sheets.keys():
-#     salary_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+
+ParsUrl = SphereLink1[3]
+a = parsSphere(ParsUrl, 1)
+print(a)
