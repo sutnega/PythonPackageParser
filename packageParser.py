@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 # Define URL
 PARSVAR = 2  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
-PARSCOUNT = 3
+PARSCOUNT = 4
 
 urlMain = "https://tara.unipack.ru"  # ссылка на отрасль
 requests.get(urlMain)
@@ -32,13 +32,21 @@ print("Собран массив сфер")
 # 1 сохранять в отдельные файлы  2 выдать DataFrame pandas
 def parsSphere(ParsUrl, ParsMode):
     SphereUrl = "https:" + ParsUrl
-    requests.get(SphereUrl)
     pages = requests.get(SphereUrl)
     # parser-lxml = Change html to Python friendly format
     soup = BeautifulSoup(pages.text, "lxml")  # код сайта готовый к обработки
     filteredParsRes = soup.find_all("div",
                                     class_="product-section")  # product-section simple,   отфильтрованный код компаний
 
+    MorePages = soup.find("ul", class_="page-nav mt30")  # проверка на наличие вложенных страниц
+    if MorePages != None:
+        IsMorePages = MorePages.find_all("a")  # product-section simple,   отфильтрованный код компаний
+        PagesNum = IsMorePages[-1].text
+        print(PagesNum)
+        for i in range(int(PagesNum)):
+            print(f"?page={i}")
+
+    # верхний парсинг страницы
     with open('filteredParsResults.txt', "w") as f:
         CompanyName1 = []
         CompanyName2 = []
@@ -46,29 +54,46 @@ def parsSphere(ParsUrl, ParsMode):
         CompanyLink2 = []
         CompanyPlaceMass = []
         CompanyDescriptionMass = []
-        for elem in filteredParsRes:
-            Links = elem.find_all("a")
-            CompanyDescription = elem.find("p")
-            CompanyPlace = elem.find("p", class_="product-p")
-            f.write(
-                " _________________________________________________________________________________________________________ \n")
-            # print(elem.prettify())
-            for link in Links:
-                link_url = link.get("href")
-                link_text = link.text.strip()
-                link_title = link.get("title")
-                # if (link_title!= None): f.write(link_title, end=' ')
-                if link == Links[0]:
-                    if link_title != None: f.write(link_title)
-                    f.write(f" \n{link_text}\n{link_url}\n")
-                    CompanyName1.append(link_title + " ")
-                    CompanyName2.append(link_text + " ")
-                    CompanyLink1.append(link_url)
-                if link == Links[-1]: CompanyLink2.append(link_url + " ")
-            f.write(f"Место: {CompanyPlace.text}\n")
-            f.write(f"Описание: {CompanyDescription.text}\n")
-            CompanyPlaceMass.append(CompanyPlace.text + " ")
-            CompanyDescriptionMass.append(CompanyDescription.text + " ")
+
+        def topParser(filteredParsRes):
+            for elem in filteredParsRes:
+                Links = elem.find_all("a")
+                CompanyDescription = elem.find("p")
+                CompanyPlace = elem.find("p", class_="product-p")
+                f.write(
+                    " _________________________________________________________________________________________________________ \n")
+                # print(elem.prettify())
+                for link in Links:
+                    link_url = link.get("href")
+                    link_text = link.text.strip()
+                    link_title = link.get("title")
+                    # if (link_title!= None): f.write(link_title, end=' ')
+                    if link == Links[0]:
+                        if link_title != None: f.write(link_title)
+                        f.write(f" \n{link_text}\n{link_url}\n")
+                        CompanyName1.append(link_title + " ")
+                        CompanyName2.append(link_text + " ")
+                        CompanyLink1.append(link_url)
+                    if link == Links[-1]: CompanyLink2.append(link_url + " ")
+                f.write(f"Место: {CompanyPlace.text}\n")
+                f.write(f"Описание: {CompanyDescription.text}\n")
+                CompanyPlaceMass.append(CompanyPlace.text + " ")
+                CompanyDescriptionMass.append(CompanyDescription.text + " ")
+            return CompanyLink1
+
+        if MorePages != None:
+            for i in range(int(PagesNum)):
+                MoreSphereUrl = SphereUrl + "?page=" + str(i)
+                Mpages = requests.get(MoreSphereUrl)
+                # parser-lxml = Change html to Python friendly format
+                Msoup = BeautifulSoup(Mpages.text, "lxml")  # код сайта готовый к обработки
+                MfilteredParsRes = Msoup.find_all("div",
+                                                  class_="product-section")  # product-section simple,   отфильтрованный код компаний
+                test = topParser(MfilteredParsRes)
+                print(test)
+                print(CompanyName1)
+        else:
+            test = topParser(filteredParsRes)
 
     print("Собрана верхняя база по " + SphereUrl)
     # print (filteredParsRes)
@@ -84,6 +109,7 @@ def parsSphere(ParsUrl, ParsMode):
     ArrAdrress = []
     ArrContactPerson = []
 
+    # глубокий парсинг компаний
     with open('AlternateResults.txt', "w") as AlterF:  # проход по всем страницам компаний
         for elem in CompanyLink1:  # проход по всем страницам компаний
             AlterF.write("________________________________________________________________________ \n")
@@ -187,14 +213,7 @@ else:
         a = parsSphere(ParsUrl, 1)
         print(a)
 
-#
-# salaries1 = a
-# salaries2 = pd.DataFrame({'Name': ['K. De Bruyne', 'Neymar Jr', 'R. Lewandowski'],
-#                                         'Salary': [370000, 270000, 240000]})
-# salaries3 = pd.DataFrame({'Name': ['Alisson', 'M. ter Stegen', 'M. Salah'],
-#                                         'Salary': [160000, 260000, 250000]})
-# salary_sheets = {'Group1': salaries1, 'Group2': salaries2, 'Group3': salaries3}
-# writer = pd.ExcelWriter('./salaries.xlsx', engine='xlsxwriter')
-#
-# for sheet_name in salary_sheets.keys():
-#     salary_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+
+# ParsUrl = SphereLink1[1]
+# a = parsSphere(ParsUrl, 1)
+# print(a)
