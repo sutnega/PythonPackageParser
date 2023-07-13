@@ -8,8 +8,10 @@ from bs4 import BeautifulSoup
 PARSVAR = 1 # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
 PARSCOUNT = 42
-
-urlMain = "https://tara.unipack.ru"  # ссылка на отрасль
+GLOBALName =0
+#https://tara.unipack.ru/russia
+#https://material.unipack.ru/russia
+urlMain = "https://tara.unipack.ru/russia"  # ссылка на отрасль
 requests.get(urlMain)
 MainPages = requests.get(urlMain)
 # parser-lxml = Change html to Python friendly format
@@ -39,6 +41,9 @@ def parsSphere(ParsUrl, ParsMode):
                                     class_="product-section")  # product-section simple,   отфильтрованный код компаний
 
     MorePages = soup.find("ul", class_="page-nav mt30")  # проверка на наличие вложенных страниц
+    SphereName =soup.find("div",
+                                    class_="js-select-region")
+    print(SphereName.text)
     if MorePages != None:
         IsMorePages = MorePages.find_all("a")  # product-section simple,   отфильтрованный код компаний
         PagesNum = IsMorePages[-1].text
@@ -184,36 +189,36 @@ def parsSphere(ParsUrl, ParsMode):
          'Описание': CompanyDescriptionMass})  # загрузка в эксель с помощью panda
 
     if ParsMode == 1:
-        parsBD.to_excel(
-            './' + 'ParsResult_' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "") + ".xlsx")
+        parsBD.to_excel('ParsResult_'+SphereName.text  + ".xlsx")
+            #'ParsResult_' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "") + ".xlsx")
 
         return 'Победа над ' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "")
     else:
         if ParsMode == 2: return parsBD
 
-# if PARSNUM == 1:
-#     ParsingVar = PARSCOUNT
-# else:
-#     if PARSNUM == 2: ParsingVar = len(SphereLink1)
-# if PARSVAR == 2:
-#     writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
-#     BD_sheets = {}
-#     # len(SphereLink1)
-#     for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
-#         ParsUrl = SphereLink1[i]
-#         a = parsSphere(ParsUrl, 2)
-#         BD_sheets[str(i + 1) + ' '] = a
-#     for sheet_name in BD_sheets.keys():
-#         BD_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
-#     writer.close()
-# else:
-#     for i in range(ParsingVar):
-#         ParsUrl = SphereLink1[i]
-#         a = parsSphere(ParsUrl, 1)
-#         print(a)
+if PARSNUM == 1:
+    ParsingVar = PARSCOUNT
+else:
+    if PARSNUM == 2: ParsingVar = len(SphereLink1)
+if PARSVAR == 2:
+    writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
+    BD_sheets = {}
+    # len(SphereLink1)
+    for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
+        ParsUrl = SphereLink1[i]
+        a = parsSphere(ParsUrl, 2)
+        BD_sheets[str(i + 1) + ' '] = a
+    for sheet_name in BD_sheets.keys():
+        BD_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+    writer.close()
+else:
+    for i in range(ParsingVar):
+        ParsUrl = SphereLink1[i]
+        a = parsSphere(ParsUrl, 1)
+        print(a)
 
 
-# ParsUrl = SphereLink1[42]
+# ParsUrl = SphereLink1[0]
 # a = parsSphere(ParsUrl, 1)
 # print(a)
 
