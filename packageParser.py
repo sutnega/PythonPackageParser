@@ -5,13 +5,16 @@ from bs4 import BeautifulSoup
 # https://www.youtube.com/watch?v=EF9UNlB05Rk&list=PL6plRXMq5RADYaw4Xo111smBcEPNMhdHf&index=3
 # по другому гайду    https://idatica.com/blog/parsing-saytov-na-python-rukovodstvo-dlya-novichkov/  https://pishuverno.ru/kak-napisat-parser-dlya-sajta-na-python/
 # Define URL
-PARSVAR = 1 # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
+PARSVAR = 1  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
-PARSCOUNT = 42
-GLOBALName =0
-#https://tara.unipack.ru/russia
-#https://material.unipack.ru/russia
-urlMain = "https://tara.unipack.ru/russia"  # ссылка на отрасль
+PARSCOUNT = 22
+STARTNUM = 0
+# https://tara.unipack.ru/russia
+# https://material.unipack.ru/russia
+# https://propack.unipack.ru/russia
+# https://packmash.unipack.ru/russia  23
+# https://foodmash.unipack.ru/russia 21
+urlMain = "https://foodmash.unipack.ru/russia"  # ссылка на отрасль
 requests.get(urlMain)
 MainPages = requests.get(urlMain)
 # parser-lxml = Change html to Python friendly format
@@ -26,7 +29,8 @@ for elem in MainFilteredParsRes:
         link_url = link.get("href")
         link_text = link.text.strip()
         link_title = link.get("title")
-        if link_title.find("Галерея продукции") == -1 and link_title.find("Публикации по теме") == -1:
+        if link_title.find("Галерея продукции") == -1 and link_title.find("Публикации по теме") and link_title.find(
+                "Цены на продукцию") == -1:
             SphereLink1.append(link_url)
 print("Собран массив сфер")
 
@@ -41,9 +45,8 @@ def parsSphere(ParsUrl, ParsMode):
                                     class_="product-section")  # product-section simple,   отфильтрованный код компаний
 
     MorePages = soup.find("ul", class_="page-nav mt30")  # проверка на наличие вложенных страниц
-    SphereName =soup.find("div",
-                                    class_="js-select-region")
-    print(SphereName.text)
+    SphereName = soup.find("div", class_="js-select-region")
+    print(SphereName)
     if MorePages != None:
         IsMorePages = MorePages.find_all("a")  # product-section simple,   отфильтрованный код компаний
         PagesNum = IsMorePages[-1].text
@@ -171,6 +174,19 @@ def parsSphere(ParsUrl, ParsMode):
                 AlterF.write(StrNotAdvanced)
 
     print("Собрана глубокая база по " + SphereUrl)
+    print("ArrAdrress = " + ArrAdrress)
+    print("ArrContactPerson = " + ArrContactPerson)
+    print("ArrContactPerson = " + ArrContactPerson)
+    print("ArrName = "+ ArrName)
+    print("ArrPhone1 = " + ArrPhone1)
+    print("ArrRegion = " + ArrRegion)
+    print("CompanyDescriptionMass = " + CompanyDescriptionMass)
+    print("CompanyLink1 = " + CompanyLink1)
+    print("CompanyName1 = " + CompanyName1)
+    print("CompanyName2 = " + CompanyName2)
+    print("CompanyLink2 = " + CompanyLink2)
+    print("CompanyPlaceMass = " + CompanyPlaceMass)
+
     # for i in range(len(ArrName)):
     #     print(ArrName[i])
     #     print(ArrCountry[i])
@@ -189,37 +205,45 @@ def parsSphere(ParsUrl, ParsMode):
          'Описание': CompanyDescriptionMass})  # загрузка в эксель с помощью panda
 
     if ParsMode == 1:
-        parsBD.to_excel('ParsResult_'+SphereName.text  + ".xlsx")
-            #'ParsResult_' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "") + ".xlsx")
+        parsBD.to_excel('ParsResult_' + SphereName.text.replace('/', "").replace('\\', "") + ".xlsx")
+        # parsBD.to_excel('ParsResult_' + "test" + ".xlsx")
+        # 'ParsResult_' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "") + ".xlsx")
 
         return 'Победа над ' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "")
     else:
         if ParsMode == 2: return parsBD
 
-if PARSNUM == 1:
-    ParsingVar = PARSCOUNT
+
+Mass = SphereLink1[STARTNUM:PARSCOUNT]
+fixNum = 1
+fixElem =2
+
+if fixNum == 0:
+    if PARSNUM == 1:
+        ParsingVar = PARSCOUNT
+    else:
+        if PARSNUM == 2: ParsingVar = len(SphereLink1)
+    if PARSVAR == 2:
+        writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
+        BD_sheets = {}
+        # len(SphereLink1)
+        for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
+            ParsUrl = Mass[i]
+            a = parsSphere(ParsUrl, 2)
+            BD_sheets[str(i + 1) + ' '] = a
+        for sheet_name in BD_sheets.keys():
+            BD_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
+        writer.close()
+    else:
+        for i in range(ParsingVar):
+            ParsUrl = Mass[i]
+            a = parsSphere(ParsUrl, 1)
+            print(a)
+            print(i)
 else:
-    if PARSNUM == 2: ParsingVar = len(SphereLink1)
-if PARSVAR == 2:
-    writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
-    BD_sheets = {}
-    # len(SphereLink1)
-    for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
-        ParsUrl = SphereLink1[i]
-        a = parsSphere(ParsUrl, 2)
-        BD_sheets[str(i + 1) + ' '] = a
-    for sheet_name in BD_sheets.keys():
-        BD_sheets[sheet_name].to_excel(writer, sheet_name=sheet_name, index=False)
-    writer.close()
-else:
-    for i in range(ParsingVar):
-        ParsUrl = SphereLink1[i]
+    if fixNum == 1:
+        ParsUrl = SphereLink1[fixElem]
         a = parsSphere(ParsUrl, 1)
-        print(a)
-
-
-# ParsUrl = SphereLink1[0]
-# a = parsSphere(ParsUrl, 1)
-# print(a)
+        print()
 
 print(SphereLink1)
