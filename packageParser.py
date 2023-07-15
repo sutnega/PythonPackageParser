@@ -8,7 +8,7 @@ from bs4 import BeautifulSoup
 PARSVAR = 1  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
 PARSCOUNT = 22
-STARTNUM = 0
+STARTNUM = 8 
 # https://tara.unipack.ru/russia
 # https://material.unipack.ru/russia
 # https://propack.unipack.ru/russia
@@ -174,18 +174,19 @@ def parsSphere(ParsUrl, ParsMode):
                 AlterF.write(StrNotAdvanced)
 
     print("Собрана глубокая база по " + SphereUrl)
-    print("ArrAdrress = " + ArrAdrress)
-    print("ArrContactPerson = " + ArrContactPerson)
-    print("ArrContactPerson = " + ArrContactPerson)
-    print("ArrName = "+ ArrName)
-    print("ArrPhone1 = " + ArrPhone1)
-    print("ArrRegion = " + ArrRegion)
-    print("CompanyDescriptionMass = " + CompanyDescriptionMass)
-    print("CompanyLink1 = " + CompanyLink1)
-    print("CompanyName1 = " + CompanyName1)
-    print("CompanyName2 = " + CompanyName2)
-    print("CompanyLink2 = " + CompanyLink2)
-    print("CompanyPlaceMass = " + CompanyPlaceMass)
+
+    print(f"ArrAdrress =   {ArrAdrress}")
+    print(f"ArrContactPerson =   {ArrContactPerson}")
+    print(f"ArrCountry =   {ArrCountry}")
+    print(f"ArrName =  {ArrName}")
+    print(f"ArrPhone1 =   {ArrPhone1}")
+    print(f"ArrRegion =   {ArrRegion}")
+    print(f"CompanyDescriptionMass =   {CompanyDescriptionMass}")
+    print(f"CompanyLink1 =   {CompanyLink1}")
+    print(f"CompanyName1 =   {CompanyName1}")
+    print(f"CompanyName2 =   {CompanyName2}")
+    print(f"CompanyLink2 =   {CompanyLink2}")
+    print(f"CompanyPlaceMass =   {CompanyPlaceMass}")
 
     # for i in range(len(ArrName)):
     #     print(ArrName[i])
@@ -215,8 +216,8 @@ def parsSphere(ParsUrl, ParsMode):
 
 
 Mass = SphereLink1[STARTNUM:PARSCOUNT]
-fixNum = 1
-fixElem =2
+fixNum = 0
+fixElem = 2
 
 if fixNum == 0:
     if PARSNUM == 1:
@@ -239,7 +240,9 @@ if fixNum == 0:
             ParsUrl = Mass[i]
             a = parsSphere(ParsUrl, 1)
             print(a)
-            print(i)
+            b = i + STARTNUM
+            print("Сохранен файл номер ")
+            print(b)
 else:
     if fixNum == 1:
         ParsUrl = SphereLink1[fixElem]
