@@ -7,14 +7,15 @@ from bs4 import BeautifulSoup
 # Define URL
 PARSVAR = 1  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
-PARSCOUNT = 22
-STARTNUM = 8 
+PARSCOUNT = 30
+STARTNUM = 0
 # https://tara.unipack.ru/russia
 # https://material.unipack.ru/russia
 # https://propack.unipack.ru/russia
 # https://packmash.unipack.ru/russia  23
 # https://foodmash.unipack.ru/russia 21
-urlMain = "https://foodmash.unipack.ru/russia"  # ссылка на отрасль
+# https://brand.unipack.ru/russia 30
+urlMain = "https://brand.unipack.ru/russia"  # ссылка на отрасль
 requests.get(urlMain)
 MainPages = requests.get(urlMain)
 # parser-lxml = Change html to Python friendly format
@@ -46,11 +47,11 @@ def parsSphere(ParsUrl, ParsMode):
 
     MorePages = soup.find("ul", class_="page-nav mt30")  # проверка на наличие вложенных страниц
     SphereName = soup.find("div", class_="js-select-region")
-    print(SphereName)
+    print(SphereName.text)
     if MorePages != None:
         IsMorePages = MorePages.find_all("a")  # product-section simple,   отфильтрованный код компаний
         PagesNum = IsMorePages[-1].text
-        print(PagesNum)
+        print("страниц: "+PagesNum)
         for i in range(int(PagesNum)):
             print(f"?page={i}")
 
@@ -66,6 +67,8 @@ def parsSphere(ParsUrl, ParsMode):
         def topParser(filteredParsRes):
             for elem in filteredParsRes:
                 Links = elem.find_all("a")
+                #print(Links)
+                if Links==None: print ("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAA")
                 CompanyDescription = elem.find("p")
                 CompanyPlace = elem.find("p", class_="product-p")
                 f.write(
@@ -81,13 +84,19 @@ def parsSphere(ParsUrl, ParsMode):
                         f.write(f" \n{link_text}\n{link_url}\n")
                         CompanyName1.append(link_title + " ")
                         CompanyName2.append(link_text + " ")
-                        CompanyLink1.append(link_url)
-                    if link == Links[-1]: CompanyLink2.append(link_url + " ")
+                        if link_url.find("/about_one/3/#3 ") == -1 :CompanyLink1.append(link_url)
+                        else: CompanyLink1.append(" ")
+                    if link == Links[-1] and link_url.find("/about_one/3/#3") == -1 : CompanyLink2.append(link_url + " ")
+                    else:
+                        if link==Links[-1] and link_title=="Бренды":CompanyLink2.append(" broken ")
+
                 f.write(f"Место: {CompanyPlace.text}\n")
                 f.write(f"Описание: {CompanyDescription.text}\n")
                 CompanyPlaceMass.append(CompanyPlace.text + " ")
                 CompanyDescriptionMass.append(CompanyDescription.text + " ")
+
             return CompanyLink1
+
 
         if MorePages != None:
             for i in range(int(PagesNum)):
@@ -116,9 +125,14 @@ def parsSphere(ParsUrl, ParsMode):
     ArrRegion = []
     ArrAdrress = []
     ArrContactPerson = []
-
     # глубокий парсинг компаний
     with open('AlternateResults.txt', "w") as AlterF:  # проход по всем страницам компаний
+
+        for i in range(len(CompanyLink2)):
+            if i< len(CompanyLink2)-2:
+                if  CompanyLink2[i] == " broken " and CompanyLink2[i + 1] == " broken " :
+                    CompanyLink2 = CompanyLink2[0:i] + CompanyLink2[i+2:]
+
         for elem in CompanyLink1:  # проход по всем страницам компаний
             AlterF.write("________________________________________________________________________ \n")
             OneUrl = "https:" + elem + "/contacts"
@@ -217,7 +231,7 @@ def parsSphere(ParsUrl, ParsMode):
 
 Mass = SphereLink1[STARTNUM:PARSCOUNT]
 fixNum = 0
-fixElem = 2
+fixElem = 0
 
 if fixNum == 0:
     if PARSNUM == 1:
