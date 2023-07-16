@@ -7,15 +7,20 @@ from bs4 import BeautifulSoup
 # Define URL
 PARSVAR = 1  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
-PARSCOUNT = 30
+PARSCOUNT = 20
 STARTNUM = 0
-# https://tara.unipack.ru/russia
-# https://material.unipack.ru/russia
+# https://tara.unipack.ru/russia 42
+# https://material.unipack.ru/russia 20
 # https://propack.unipack.ru/russia
 # https://packmash.unipack.ru/russia  23
 # https://foodmash.unipack.ru/russia 21
 # https://brand.unipack.ru/russia 30
-urlMain = "https://brand.unipack.ru/russia"  # ссылка на отрасль
+#https://plasmash.unipack.ru/russia 36
+#https://log.unipack.ru/russia 8
+#https://print.unipack.ru/russia 6
+#https://service.unipack.ru/russia 55
+#https://nonfood.unipack.ru/russia 28
+urlMain = "https://material.unipack.ru/russia"  # ссылка на отрасль
 requests.get(urlMain)
 MainPages = requests.get(urlMain)
 # parser-lxml = Change html to Python friendly format
@@ -88,7 +93,7 @@ def parsSphere(ParsUrl, ParsMode):
                         else: CompanyLink1.append(" ")
                     if link == Links[-1] and link_url.find("/about_one/3/#3") == -1 : CompanyLink2.append(link_url + " ")
                     else:
-                        if link==Links[-1] and link_title=="Бренды":CompanyLink2.append(" broken ")
+                        if link==Links[-1] and link_url.find("/about_one/3/#3")!=-1:CompanyLink2.append(" broken ")
 
                 f.write(f"Место: {CompanyPlace.text}\n")
                 f.write(f"Описание: {CompanyDescription.text}\n")
@@ -220,7 +225,7 @@ def parsSphere(ParsUrl, ParsMode):
          'Описание': CompanyDescriptionMass})  # загрузка в эксель с помощью panda
 
     if ParsMode == 1:
-        parsBD.to_excel('ParsResult_' + SphereName.text.replace('/', "").replace('\\', "") + ".xlsx")
+        parsBD.to_excel('ParsResult_' + SphereName.text.replace('/', "").replace('\\', "").replace(':', "") + ".xlsx")
         # parsBD.to_excel('ParsResult_' + "test" + ".xlsx")
         # 'ParsResult_' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "") + ".xlsx")
 
