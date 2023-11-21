@@ -1,17 +1,19 @@
-import requests
-import pandas as pd
-from bs4 import BeautifulSoup
+import requests #pip install requests
+import pandas as pd #pip install pandas
+from bs4 import BeautifulSoup  #pip install beautifulsoup4
+#pip install lxml
+
 
 # https://www.youtube.com/watch?v=EF9UNlB05Rk&list=PL6plRXMq5RADYaw4Xo111smBcEPNMhdHf&index=3
 # по другому гайду    https://idatica.com/blog/parsing-saytov-na-python-rukovodstvo-dlya-novichkov/  https://pishuverno.ru/kak-napisat-parser-dlya-sajta-na-python/
 # Define URL
 PARSVAR = 1  # 1 сохранять сферы в отдельные файлы     2 сохранить все в один файл
 PARSNUM = 1  # 1 спарсить первые PARSCOUNT сфер        2 спарсить все
-PARSCOUNT = 20
+PARSCOUNT = 28
 STARTNUM = 0
 # https://tara.unipack.ru/russia 42
 # https://material.unipack.ru/russia 20
-# https://propack.unipack.ru/russia
+# https://propack.unipack.ru/russia 48
 # https://packmash.unipack.ru/russia  23
 # https://foodmash.unipack.ru/russia 21
 # https://brand.unipack.ru/russia 30
@@ -20,14 +22,12 @@ STARTNUM = 0
 #https://print.unipack.ru/russia 6
 #https://service.unipack.ru/russia 55
 #https://nonfood.unipack.ru/russia 28
-urlMain = "https://material.unipack.ru/russia"  # ссылка на отрасль
+urlMain = "https://nonfood.unipack.ru/russia "  # ссылка на отрасль
 requests.get(urlMain)
 MainPages = requests.get(urlMain)
 # parser-lxml = Change html to Python friendly format
 MainSoup = BeautifulSoup(MainPages.text, "lxml")  # код сайта готовый к обработки
-MainFilteredParsRes = MainSoup.find("div",
-                                    class_="content-work").find("ul")  # отфильтрованный код компаний
-
+MainFilteredParsRes = MainSoup.find("div", class_="content-work").find("ul")  # отфильтрованный код компаний
 SphereLink1 = []
 for elem in MainFilteredParsRes:
     Links = MainFilteredParsRes.find_all("a")
@@ -141,7 +141,6 @@ def parsSphere(ParsUrl, ParsMode):
         for elem in CompanyLink1:  # проход по всем страницам компаний
             AlterF.write("________________________________________________________________________ \n")
             OneUrl = "https:" + elem + "/contacts"
-            requests.get(OneUrl)
             pages = requests.get(OneUrl)
             # parser-lxml = Change html to Python friendly format
             soup = BeautifulSoup(pages.text, "lxml")  # код сайта готовый к обработки
@@ -154,6 +153,7 @@ def parsSphere(ParsUrl, ParsMode):
                 NameIndex = StrAdvanced.find("Контакты\n\n")
                 AdrrIndex = StrAdvanced.find("Адрес: ")
                 PhoneIndex = StrAdvanced.find("Телефон: ")
+                ContactPersonIndex = StrAdvanced.find("Контактное лицо: ")
                 ContactPersonIndex = StrAdvanced.find("Контактное лицо: ")
                 EndIndex = StrAdvanced.find(" \nОтправить запрос")
                 CountryIndex = StrAdvanced.find("Страна:\n")
@@ -225,7 +225,8 @@ def parsSphere(ParsUrl, ParsMode):
          'Описание': CompanyDescriptionMass})  # загрузка в эксель с помощью panda
 
     if ParsMode == 1:
-        parsBD.to_excel('ParsResult_' + SphereName.text.replace('/', "").replace('\\', "").replace(':', "") + ".xlsx")
+        parsBD.to_csv('ParsResult_' + SphereName.text.replace('/', "").replace('\\', "").replace(':', "") + ".csv",encoding = "utf-8")
+        #parsBD.to_excel('ParsResult_' + SphereName.text.replace('/', "").replace('\\', "").replace(':', "") + ".xlsx")
         # parsBD.to_excel('ParsResult_' + "test" + ".xlsx")
         # 'ParsResult_' + SphereUrl.replace(urlMain + "/", "").replace("russia-", "") + ".xlsx")
 
@@ -247,7 +248,7 @@ if fixNum == 0:
         writer = pd.ExcelWriter('./FullBD.xlsx', engine='xlsxwriter')
         BD_sheets = {}
         # len(SphereLink1)
-        for i in range(ParsingVar):  # строка для запуска парсера  вставить строку свыше
+        for i in range(ParsingVar):  # строка для запуска парсера
             ParsUrl = Mass[i]
             a = parsSphere(ParsUrl, 2)
             BD_sheets[str(i + 1) + ' '] = a
